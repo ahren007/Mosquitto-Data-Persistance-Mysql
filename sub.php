@@ -1,36 +1,34 @@
-#!/usr/bin/php -q 
+#!/usr/bin/php
 <?php
- 
-$client = new Mosquitto\Client();
-$client->onConnect('connect');
-$client->onDisconnect('disconnect');
-$client->onSubscribe('subscribe');
-$client->onMessage('message');
-$client->connect("localhost", 1883, 60);
-$client->subscribe('/#', 1);
- 
- 
-while (true) {
-        $client->loop();
-        sleep(1);
+require("./phpMQTT.php");
+$mqtt = new phpMQTT("localhost", 1883, "phpMQTT Sub Example"); //Change client name to something unique
+if(!$mqtt->connect()){
+        exit(1);
 }
- 
-$client->disconnect();
-unset($client);
- 
-function connect($r) {
-        echo "I got code {$r}\n";
+$
+topics['/#'] = array("qos"=>0, "function"=>"procmsg");
+$mqtt->subscribe($topics,0);
+
+while($mqtt->proc()){
 }
- 
-function subscribe() {
-        echo "Subscribed to a topic\n";
-}
- 
-function message($message) {
-        printf("\nGot a message on topic %s with payload:%s", 
-                $message->topic, $message->payload);
-}
- 
-function disconnect() {
-        echo "Disconnected cleanly\n";
+$mqtt->close();
+
+function procmsg($topic,$msg){
+                #echo "Msg Recieved: ".date("r")."\nTopic:{$topic}\n$msg\n";
+                #echo date("r")."\n";
+                #echo "$msg\n";
+
+                $con = mysql_connect("localhost","mqtt_logs","mqtt_logs");
+                        if (!$con)
+                                {
+                          die('Could not connect: ' . mysql_error());
+                        }
+                mysql_select_db("mqtt_logs", $con);
+                $sql="INSERT INTO mqtt_logs (payload) VALUES ('$msg')";
+                        if (!mysql_query($sql,$con))
+                                {
+                         die('Error: ' . mysql_error());
+                        }
+                mysql_close($con);
+                #echo "1 record added";
 }
