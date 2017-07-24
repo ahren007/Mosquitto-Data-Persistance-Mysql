@@ -1,4 +1,4 @@
-#!/usr/bin/php
+#!/usr/bin/php -q
 <?php
 require("./phpMQTT.php");
 $mqtt = new phpMQTT("localhost", 1883, "phpMQTT Sub Example"); //Change client name to something unique
